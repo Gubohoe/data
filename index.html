@@ -1,112 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECharts Pie Chart</title>
-    <!-- ECharts library script -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>
+    <meta charset="utf-8">
+    <title>Korea Population Estimates (2022)</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.3/dist/echarts.min.js"></script>
 </head>
 <body>
-    <!-- 연도 선택 드롭다운 메뉴 -->
-    <label for="yearSelect">사고현황:</label>
-    <select id="yearSelect">
-        <option value="2020">2020</option>
-        <option value="2021">2021</option>
-        <option value="2022">2022</option>
-    </select>
+    <div id="main" style="width: 800px; height: 600px;"></div>
 
-    <!-- Chart container with ID 'main' -->
-    <div id="main" style="width: 600px; height: 400px;"></div>
-
-    <!-- JavaScript code to create and update the chart -->
     <script>
         var chartDom = document.getElementById('main');
         var myChart = echarts.init(chartDom);
         var option;
 
-        // Define a function to read CSV data and return an array of objects
-        async function readCSV(filename) {
-            const response = await fetch(filename);
-            const data = await response.text();
-            const rows = data.split('\n');
-            const headers = rows[0].split(',');
-            const result = [];
+        myChart.showLoading();
 
-            for (let i = 1; i < rows.length; i++) {
-                const values = rows[i].split(',');
-                const obj = {};
+        // Replace this URL with the location of your Korea map JSON file.
+        var koreaMapURL = 'https://your-website.com/path-to-korea.json';
 
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = values[j];
-                }
+        // Fetch the Korea map JSON data.
+        fetch(koreaMapURL)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(koreaJson) {
+                myChart.hideLoading();
+                echarts.registerMap('Korea', koreaJson);
 
-                result.push(obj);
-            }
-
-            return result;
-        }
-
-        // Define a function to update the chart based on the selected year
-        async function updateChart(year) {
-            // Replace with the actual file paths to your CSV data
-            const dataFilePath = year + '.csv';
-            const data = await readCSV(dataFilePath);
-
-            // Count the number of incidents for each unique '사고부위'
-            const incidentCounts = {};
-            data.forEach(item => {
-                const area = item['사고부위'];
-                if (area) {
-                    if (!incidentCounts[area]) {
-                        incidentCounts[area] = 0;
-                    }
-                    incidentCounts[area]++;
-                }
-            });
-
-            // Convert the incident counts into an array of objects and sort in descending order
-            const sortedData = Object.entries(incidentCounts)
-                .map(([area, count]) => ({
-                    name: area,
-                    value: count,
-                }))
-                .sort((a, b) => b.value - a.value); // Sort in descending order
-
-            option = {
-                title: {
-                    text: `${year}년도 사고현황 (${data.length}건)`,
-                    left: 'center',
-                    top: 20,
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{b}: {c}건 ({d}%)',
-                },
-                series: [
-                    {
-                        data: sortedData,
-                        type: 'pie',
-                        label: {
-                            show: false,
-                            formatter: '{b}: {c}건 ({d}%)',
-                        },
+                option = {
+                    title: {
+                        text: 'Korea Population Estimates (2022)',
+                        subtext: 'Data source: Your Source',
+                        sublink: 'https://yourdatasource.com',
+                        left: 'right'
                     },
-                ],
-            };
-            myChart.setOption(option);
-        }
+                    tooltip: {
+                        trigger: 'item',
+                        showDelay: 0,
+                        transitionDuration: 0.2
+                    },
+                    visualMap: {
+                        left: 'right',
+                        min: 500000,
+                        max: 50000000,
+                        inRange: {
+                            color: [
+                                '#f9f0a6',
+                                '#ecaa61',
+                                '#e2765a',
+                                '#c94c4c',
+                                '#882426'
+                            ]
+                        },
+                        text: ['High', 'Low'],
+                        calculable: true
+                    },
+                    toolbox: {
+                        show: true,
+                        left: 'left',
+                        top: 'top',
+                        feature: {
+                            dataView: { readOnly: false },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Korea PopEstimates',
+                            type: 'map',
+                            roam: true,
+                            map: 'Korea',
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            },
+                            data: [
+                                { name: '서울', value: 10000000 },
+                                { name: '부산', value: 3500000 },
+                                { name: '대구', value: 2500000 },
+                                { name: '인천', value: 2900000 },
+                                { name: '광주', value: 1500000 },
+                                // Add more regions and population data
+                            ]
+                        }
+                    ]
+                };
 
-
-        // Initial chart for the selected year
-        updateChart('2020');
-
-        // Add an event listener to update the chart when the year is changed
-        var yearSelect = document.getElementById('yearSelect');
-        yearSelect.addEventListener('change', function () {
-            var selectedYear = yearSelect.value;
-            updateChart(selectedYear);
-        });
+                myChart.setOption(option);
+            })
+            .catch(function(error) {
+                console.error('Failed to load Korea map data:', error);
+            });
     </script>
 </body>
 </html>
