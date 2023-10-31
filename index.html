@@ -6,6 +6,10 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.3/dist/echarts.min.js"></script>
 </head>
 <body>
+    <div>
+        <input type="file" id="fileInput">
+        <button id="generateChart">Generate Chart</button>
+    </div>
     <div id="main" style="width: 800px; height: 600px;"></div>
 
     <script>
@@ -13,86 +17,112 @@
         var myChart = echarts.init(chartDom);
         var option;
 
-        myChart.showLoading();
-
         // Replace this URL with the location of your Korea map JSON file.
         var koreaMapURL = 'korea.json';
 
-        // Fetch the Korea map JSON data.
-        fetch(koreaMapURL)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(koreaJson) {
-                myChart.hideLoading();
-                echarts.registerMap('Korea', koreaJson);
-
-                option = {
-                    title: {
-                        text: 'Korea Population Estimates (2022)',
-                        subtext: 'Data source: Your Source',
-                        sublink: 'https://yourdatasource.com',
-                        left: 'right'
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        showDelay: 0,
-                        transitionDuration: 0.2
-                    },
-                    visualMap: {
-                        left: 'right',
-                        min: 500000,
-                        max: 50000000,
-                        inRange: {
-                            color: [
-                                '#f9f0a6',
-                                '#ecaa61',
-                                '#e2765a',
-                                '#c94c4c',
-                                '#882426'
-                            ]
-                        },
-                        text: ['High', 'Low'],
-                        calculable: true
-                    },
-                    toolbox: {
-                        show: true,
-                        left: 'left',
-                        top: 'top',
-                        feature: {
-                            dataView: { readOnly: false },
-                            restore: {},
-                            saveAsImage: {}
+        document.getElementById('generateChart').addEventListener('click', function () {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        if (!Array.isArray(data)) {
+                            throw new Error("Data should be an array of objects.");
                         }
-                    },
-                    series: [
-                        {
-                            name: 'Korea PopEstimates',
-                            type: 'map',
-                            roam: true,
-                            map: 'Korea',
-                            emphasis: {
-                                label: {
-                                    show: true
+
+                        // Create an object to store region population data
+                        var regionData = {};
+
+                        // Extract region names and counts from the data
+                        data.forEach(function (item) {
+                            var region = item.region;
+                            if (region) {
+                                regionData[region] = (regionData[region] || 0) + 1;
+                            }
+                        });
+
+                        myChart.showLoading();
+
+                        // Fetch the Korea map JSON data
+                        fetch(koreaMapURL)
+                            .then(function (response) {
+                                return response.json();
+                            })
+                            .then(function (koreaJson) {
+                                myChart.hideLoading();
+                                echarts.registerMap('Korea', koreaJson);
+
+                                // Convert region population data to ECharts format
+                                var seriesData = [];
+                                for (var region in regionData) {
+                                    seriesData.push({ name: region, value: regionData[region] });
                                 }
-                            },
-                            data: [
-                                { name: '서울', value: 10000000 },
-                                { name: '부산', value: 3500000 },
-                                { name: '대구', value: 2500000 },
-                                { name: '인천', value: 2900000 },
-                                { name: '광주', value: 1500000 },
-                                // Add more regions and population data
-                            ]
-                        }
-                    ]
-                };
 
-                myChart.setOption(option);
-            })
-            .catch(function(error) {
-                console.error('Failed to load Korea map data:', error);
-            });
+                                option = {
+                                    title: {
+                                        text: 'Korea Population Estimates (2022)',
+                                        subtext: 'Data source: Your Source',
+                                        sublink: 'https://yourdatasource.com',
+                                        left: 'right'
+                                    },
+                                    tooltip: {
+                                        trigger: 'item',
+                                        showDelay: 0,
+                                        transitionDuration: 0.2
+                                    },
+                                    visualMap: {
+                                        left: 'right',
+                                        min: 0,
+                                        max: Math.max.apply(null, Object.values(regionData)),
+                                        inRange: {
+                                            color: ['#f9f0a6', '#ecaa61', '#e2765a', '#c94c4c', '#882426']
+                                        },
+                                        text: ['High', 'Low'],
+                                        calculable: true
+                                    },
+                                    toolbox: {
+                                        show: true,
+                                        left: 'left',
+                                        top: 'top',
+                                        feature: {
+                                            dataView: { readOnly: false },
+                                            restore: {},
+                                            saveAsImage: {}
+                                        }
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Korea PopEstimates',
+                                            type: 'map',
+                                            roam: true,
+                                            map: 'Korea',
+                                            emphasis: {
+                                                label: {
+                                                    show: true
+                                                }
+                                            },
+                                            data: seriesData
+                                        }
+                                    ]
+                                };
+
+                                myChart.setOption(option);
+                            })
+                            .catch(function (error) {
+                                console.error('Failed to load Korea map data:', error);
+                            });
+                    } catch (error) {
+                        console.error('Invalid data format:', error);
+                        alert('Invalid data format. Please provide data in JSON format.');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                alert("Please select a file.");
+            }
+        });
     </script>
 </body>
 </html>
