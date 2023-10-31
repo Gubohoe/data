@@ -137,6 +137,7 @@
 
             // 지역 정보가 들어있는 열을 식별합니다.
             var regionColumn = '';
+
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].toLowerCase().includes('지역')) {
                     regionColumn = headers[i];
@@ -158,6 +159,59 @@
 
                 if (regionValue) {
                     regionValue = regionValue.trim();  // 앞뒤 공백 제거
+
+                    if (regionValue === '서울') {
+                        regionValue = '서울특별시';
+                    }
+                    else if (regionValue === '부산'){
+                        regionValue = '부광역시';
+                    }
+                    else if (regionValue === '대구'){
+                        regionValue = '대구광역시';
+                    }
+                    else if (regionValue === '인천'){
+                        regionValue = '인천광역시';
+                    }
+                    else if (regionValue === '광주'){
+                        regionValue = '광주광역시';
+                    }
+                    else if (regionValue === '대전'){
+                        regionValue = '대전광역시';
+                    }
+                    else if (regionValue === '울산'){
+                        regionValue = '울산광역시';
+                    }
+                    else if (regionValue === '세종'){
+                        regionValue = '세종특별자치시';
+                    }
+                    else if (regionValue === '경기'){
+                        regionValue = '경기도';
+                    }
+                    else if (regionValue === '강원'){
+                        regionValue = '강원도';
+                    }
+                    else if (regionValue === '충북'){
+                        regionValue = '충청북도';
+                    }
+                    else if (regionValue === '충남'){
+                        regionValue = '충청남도';
+                    }
+                    else if (regionValue === '전북'){
+                        regionValue = '전라북도';
+                    }
+                    else if (regionValue === '전남'){
+                        regionValue = '전라남도';
+                    }
+                    else if (regionValue === '경북'){
+                        regionValue = '경상북도';
+                    }
+                    else if (regionValue === '경남'){
+                        regionValue = '경상남도';
+                    }
+                    else if (regionValue === '제주'){
+                        regionValue = '제주특별자치도';
+                    }
+
                     regionCounts[regionValue] = (regionCounts[regionValue] || 0) + 1;
                 }
             }
